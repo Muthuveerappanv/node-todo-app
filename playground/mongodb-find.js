@@ -8,7 +8,7 @@ MongoClient.connect('mongodb://localhost:27017', (err, client) => {
 
     var db = client.db('TodoApp');
 
-    db.collection('Todos').find(new ObjectID('5ab576137bba800e64885933')).toArray().then((res) => {
+    db.collection('Todos').find({_id: new ObjectID('5ab576137bba800e64885933')}).toArray().then((res) => {
         console.log(JSON.stringify(res, undefined, 2));
     }).catch(error => {
         console.log(`Error ${error}`)
