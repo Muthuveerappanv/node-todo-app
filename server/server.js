@@ -9,7 +9,7 @@ const port = 3000 || process.env.PORT;
 
 var app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
 app.post('/todos', (req, res) => {
     var todo = new Todo({
@@ -26,4 +26,4 @@ app.listen(port, () => {
     console.log(`Listening on ${port}`);
 })
 
-app.get('/')
+module.exports.app = app;
