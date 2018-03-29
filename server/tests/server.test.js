@@ -96,3 +96,87 @@ describe('GET /todos/:id', () => {
             .end(done);
     })
 });
+
+
+describe('Delete /todos/:id', () => {
+    it('Should return todo doc after successfully deleting', (done) => {
+        var id = todos[0]._id;
+        request(app)
+            .delete(`/todos/${id.toString()}`)
+            .expect(202)
+            .expect('Content-Type', /json/)
+            .expect(res => {
+                expect(res.body.todo.text).toEqual(todos[0].text);
+            }).end((err, res) => {
+                if (err) return err;
+                Todo.findById(id).then(todo => {
+                    expect(todo).toBeNull();
+                    done();
+                })
+            });
+    })
+
+    it('Should return a 404 if incorrect objectId passed', (done) => {
+        request(app)
+            .delete('/todos/1')
+            .expect(404)
+            .expect(res => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    })
+
+    it('Should return a 404 if no todo found', (done) => {
+        request(app)
+            .delete(`/todos/${new ObjectID()}`)
+            .expect(404)
+            .expect(res => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    })
+});
+
+
+describe('Patch /todos/:id', () => {
+    it('Should return todo doc after successfully deleting', (done) => {
+        var id = todos[0]._id;
+        var patchinput = { 'text': 'testing patch', 'completed': true };
+        request(app)
+            .patch(`/todos/${id.toString()}`)
+            .send(patchinput)
+            .expect(202)
+            .expect('Content-Type', /json/)
+            .expect(res => {
+                expect(res.body.todo.text).toEqual(patchinput.text);
+            }).end((err, res) => {
+                if (err) return err;
+                Todo.findById(id).then(todo => {
+                    expect(todo.text).toEqual(patchinput.text);
+                    expect(todo.completed).toEqual(true);
+                    expect(todo.completedAt instanceof Date);
+                    done();
+                })
+            });
+    })
+
+    // it('Should return a 404 if incorrect objectId passed', (done) => {
+    //     request(app)
+    //         .delete('/todos/1')
+    //         .expect(404)
+    //         .expect(res => {
+    //             expect(res.body).toEqual({});
+    //         })
+    //         .end(done);
+    // })
+
+    // it('Should return a 404 if no todo found', (done) => {
+    //     request(app)
+    //         .delete(`/todos/${new ObjectID()}`)
+    //         .expect(404)
+    //         .expect(res => {
+    //             expect(res.body).toEqual({});
+    //         })
+    //         .end(done);
+    // })
+});
