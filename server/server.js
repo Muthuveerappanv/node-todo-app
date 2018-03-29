@@ -71,6 +71,22 @@ app.patch('/todos/:id', (req, res) => {
     }).catch(err => res.status(404).send());
 })
 
+
+// users
+
+app.post('/users', (req, res) => {
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = new User(body);
+    // User.create(user).then((user) => {
+    //     return user.generateAuthToken();
+    // }).then((token) => {
+    //     res.header('x-auth', token).send(user);
+    // }).catch(err => res.status(400).send(err));
+    user.generateAuthToken().then(token => {
+        res.header('x-auth', token).send(user);
+    }).catch(err => res.status(400).send(err));
+})
+
 app.listen(process.env.PORT, () => {
     console.log(`Listening on ${process.env.PORT}`);
 })
