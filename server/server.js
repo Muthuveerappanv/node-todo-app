@@ -6,7 +6,7 @@ const { Todo } = require('./models/todo');
 const { User } = require('./models/User');
 const { ObjectID } = require('mongodb');
 
-const port = 3000 || process.env.PORT;
+const port = process.env.PORT || 3000;
 
 var app = express();
 
