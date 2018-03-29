@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
 
 var UserSchema = new mongoose.Schema({
-    _id:{
+    _id: {
         type: mongoose.Schema.Types.ObjectId,
         default: new ObjectID()
     },
@@ -50,10 +50,26 @@ UserSchema.methods.generateAuthToken = function () {
 }
 
 
-UserSchema.methods.toJSON = function() {
+UserSchema.methods.toJSON = function () {
     var user = this;
     var userObj = user.toObject();
     return _.pick(userObj, ['_id', 'email']);
+}
+
+UserSchema.statics.findByToken = function (token) {
+    var User = this;
+    var decoded;
+    try {
+        decoded = jwt.verify(token, 'abc123');
+        console.log(decoded);
+    } catch (e) {
+        return Promise.reject();
+    }
+    return User.findOne({
+        _id: decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
 }
 
 var User = mongoose.model('user', UserSchema);
