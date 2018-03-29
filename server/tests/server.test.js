@@ -3,8 +3,9 @@ const request = require('supertest');
 
 const { app } = require('./../server');
 const { Todo } = require('./../models/todo');
+const { ObjectID } = require('mongodb');
 
-const todos = [{ text: 'test todos1' }, { text: 'test todos2' }];
+const todos = [{ _id: new ObjectID(), text: 'test todos1' }, { _id: new ObjectID(), text: 'test todos2' }];
 
 beforeEach((done) => {
     Todo.remove().then(() => {
@@ -57,6 +58,40 @@ describe('GET /todos', () => {
             .expect('Content-Type', /json/)
             .expect(res => {
                 expect(res.body.todos[0].text).toEqual(todos[0].text);
+            })
+            .end(done);
+    })
+});
+
+describe('GET /todos/:id', () => {
+    it('Should return todo doc', (done) => {
+        var id = todos[0]._id;
+        request(app)
+            .get(`/todos/${id.toString()}`)
+            .expect(200)
+            .expect('Content-Type', /json/)
+            .expect(res => {
+                expect(res.body.todo.text).toEqual(todos[0].text);
+            })
+            .end(done);
+    })
+
+    it('Should return a 404 if incorrect objectId passed', (done) => {
+        request(app)
+            .get('/todos/1')
+            .expect(404)
+            .expect(res => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    })
+
+    it('Should return a 404 if no todo found', (done) => {
+        request(app)
+            .get(`/todos/${new ObjectID()}`)
+            .expect(404)
+            .expect(res => {
+                expect(res.body).toEqual({});
             })
             .end(done);
     })

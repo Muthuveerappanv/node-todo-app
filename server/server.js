@@ -26,7 +26,7 @@ app.post('/todos', (req, res) => {
 app.get('/todos', (req, res) => {
     Todo.find().then(todos => {
         res.send({ todos })
-    }).catch(err => res.status(400).send(err));
+    }).catch(err => res.status(400).send());
 })
 
 app.get('/todos/:id', (req, res) => {
@@ -38,7 +38,7 @@ app.get('/todos/:id', (req, res) => {
             res.status(404).send();
         }
         res.send({ todo })
-    }).catch(err => res.status(400).send(err));
+    }).catch(err => res.status(400).send());
 })
 
 app.listen(port, () => {
