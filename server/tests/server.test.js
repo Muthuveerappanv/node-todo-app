@@ -3,15 +3,13 @@ const request = require('supertest');
 
 const { app } = require('./../server');
 const { Todo } = require('./../models/todo');
+const { User } = require('./../models/user');
 const { ObjectID } = require('mongodb');
 
-const todos = [{ _id: new ObjectID(), text: 'test todos1' }, { _id: new ObjectID(), text: 'test todos2' }];
+const { todos, populateTodos, users, populateUsers } = require('./seed/seed');
 
-beforeEach((done) => {
-    Todo.remove().then(() => {
-        return Todo.insertMany(todos);
-    }).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
     it('Should test /todos response', (done) => {
@@ -159,24 +157,73 @@ describe('Patch /todos/:id', () => {
                 })
             });
     })
+});
 
-    // it('Should return a 404 if incorrect objectId passed', (done) => {
-    //     request(app)
-    //         .delete('/todos/1')
-    //         .expect(404)
-    //         .expect(res => {
-    //             expect(res.body).toEqual({});
-    //         })
-    //         .end(done);
-    // })
+// users test
 
-    // it('Should return a 404 if no todo found', (done) => {
-    //     request(app)
-    //         .delete(`/todos/${new ObjectID()}`)
-    //         .expect(404)
-    //         .expect(res => {
-    //             expect(res.body).toEqual({});
-    //         })
-    //         .end(done);
-    // })
+describe('GET  /users/me', () => {
+    it('Should validate user token', (done) => {
+        request(app)
+            .get(`/users/me`)
+            .set('x-auth', users[0].tokens[0].token)
+            .send()
+            .expect(200)
+            .expect(res => {
+                expect(res.body.email).toEqual(users[0].email);
+            }).end(done);
+    })
+
+    it('Should return 401 when user with invalid token passed', (done) => {
+        request(app)
+            .get(`/users/me`)
+            .set('x-auth', '')
+            .send()
+            .expect(401)
+            .expect(res => {
+                expect(res.body).toEqual({});
+            }).end(done);
+    })
+});
+
+
+describe('POST  /users', () => {
+    it('Should validate user token', (done) => {
+        var password = 'pass1234';
+        var email = 'test@test.com';
+        request(app)
+            .post(`/users`)
+            .send({ email, password })
+            .expect(200)
+            .expect(res => {
+                expect(res.body.email).toEqual(email);
+            }).end((err, res) => {
+                if (err) return done(err);
+                User.findOne({ email }).then(user => {
+                    expect(user.email).toEqual(email);
+                    expect(user.password).not.toBe(password);
+                    done();
+                })
+            });
+    })
+
+    it('Should return 400 when user with invalid email passed', (done) => {
+        var password = 'pass1234';
+        var email = 'test.com';
+        request(app)
+            .post(`/users`)
+            .send({ email, password })
+            .expect(400)
+            .end(done);
+    })
+
+
+    it('Should return 400 when user duplicate email passed', (done) => {
+        var password = 'pass1234';
+        var email = 'usertwo@gmail.com';
+        request(app)
+            .post(`/users`)
+            .send({ email, password })
+            .expect(400)
+            .end(done);
+    })
 });
