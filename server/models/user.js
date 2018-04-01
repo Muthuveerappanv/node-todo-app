@@ -72,6 +72,45 @@ UserSchema.statics.findByToken = function (token) {
     });
 }
 
+UserSchema.statics.loginByEmail = function (email, password) {
+    return User.findOne({ email }).then(user => {
+        if (!user) {
+            return Promise.reject();
+        }
+        // return new Promise((resolve, reject) => {
+        //     bcrypt.compare(password, user.password).then(res => {
+        //         if (res) {
+        //             return resolve(user);
+        //         } else {
+        //             return reject();
+        //         }
+        //     }).catch(err => {
+        //         return reject();
+        //     })
+        // }) 
+        return bcrypt.compare(password, user.password).then(res => {
+            if (res) {
+                return Promise.resolve(user);
+            } else {
+                return Promise.reject();
+            }
+        }).catch(err => {
+            return Promise.reject()
+        });
+    })
+}
+
+UserSchema.methods.removeToken = function (token) {
+    var user = this;
+    return user.update({
+        $pull: {
+            tokens: {
+                token
+            }
+        }
+    });
+}
+
 UserSchema.pre('save', function (next) {
     var user = this;
     if (user.isModified('password')) {

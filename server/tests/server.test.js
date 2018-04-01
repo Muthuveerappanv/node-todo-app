@@ -227,3 +227,47 @@ describe('POST  /users', () => {
             .end(done);
     })
 });
+
+
+
+describe('POST  /users/login', () => {
+    it('Should validate user token', (done) => {
+        var password = users[0].password;
+        var email = users[0].email;
+        request(app)
+            .post(`/users/login`)
+            .send({ email, password })
+            .expect(200)
+            .expect(res => {
+                expect(res.body.email).toEqual(email);
+            }).end((err, res) => {
+                if (err) return done(err);
+                User.findOne({ email }).then(user => {
+                    expect(user.email).toEqual(email);
+                    expect(user.password).not.toBe(password);
+                    done();
+                })
+            });
+    })
+
+    it('Should return 400 when user with invalid email passed', (done) => {
+        var password = 'pass1234';
+        var email = 'test.com';
+        request(app)
+            .post(`/users/login`)
+            .send({ email, password })
+            .expect(401)
+            .end(done);
+    })
+
+
+    // it('Should return 400 when user duplicate email passed', (done) => {
+    //     var password = 'pass1234';
+    //     var email = 'usertwo@gmail.com';
+    //     request(app)
+    //         .post(`/users`)
+    //         .send({ email, password })
+    //         .expect(400)
+    //         .end(done);
+    // })
+});

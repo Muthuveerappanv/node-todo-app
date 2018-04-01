@@ -7,7 +7,7 @@ const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
 const { ObjectID } = require('mongodb');
-const {authenticate} = require('./middleware/authenticate');
+const { authenticate } = require('./middleware/authenticate');
 
 var app = express();
 
@@ -91,6 +91,26 @@ app.post('/users', (req, res) => {
 
 app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
+})
+
+app.post('/users/login', (req, res) => {
+    User.loginByEmail(req.body.email, req.body.password).then(user => {
+        user.generateAuthToken().then((token) => {
+            res.setHeader('x-auth', token);
+            res.status(200).send(user);
+        })
+
+    }).catch(error => {
+        res.status(401).send();
+    });
+})
+
+app.delete('/users/logout', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.send('success');
+    }).catch(err => {
+        return res.send(400);
+    })
 })
 
 app.listen(process.env.PORT, () => {
