@@ -72,7 +72,7 @@ UserSchema.statics.findByToken = function (token) {
     });
 }
 
-UserSchema.statics.loginByEmail = function (email, password) {
+UserSchema.statics.loginByEmail = ((email, password) => {
     return User.findOne({ email }).then(user => {
         if (!user) {
             return Promise.reject();
@@ -98,17 +98,14 @@ UserSchema.statics.loginByEmail = function (email, password) {
             return Promise.reject()
         });
     })
-}
+})
 
 UserSchema.methods.removeToken = function (token) {
-    var user = this;
-    return user.update({
+    return this.update({
         $pull: {
-            tokens: {
-                token
-            }
+            tokens: { token }
         }
-    });
+    })
 }
 
 UserSchema.pre('save', function (next) {

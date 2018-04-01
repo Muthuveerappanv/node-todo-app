@@ -259,15 +259,32 @@ describe('POST  /users/login', () => {
             .expect(401)
             .end(done);
     })
+});
 
+describe('Delete  /users/logut', () => {
+    it('Should validate user token', (done) => {
+        var token = users[0].tokens[0].token;
+        request(app)
+            .delete(`/users/logout`)
+            .set('x-auth', token)
+            .send()
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                User.findById(users[0]._id).then(user => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch(err => done(err));
+            })
+    })
 
-    // it('Should return 400 when user duplicate email passed', (done) => {
-    //     var password = 'pass1234';
-    //     var email = 'usertwo@gmail.com';
-    //     request(app)
-    //         .post(`/users`)
-    //         .send({ email, password })
-    //         .expect(400)
-    //         .end(done);
-    // })
+    it('Should return 401 when user with invalid token passed', (done) => {
+        request(app)
+            .delete(`/users/logout`)
+            .send()
+            .expect(401)
+            .end(done);
+    })
 });

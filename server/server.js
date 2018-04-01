@@ -109,7 +109,8 @@ app.delete('/users/logout', authenticate, (req, res) => {
     req.user.removeToken(req.token).then(() => {
         res.send('success');
     }).catch(err => {
-        return res.send(400);
+        console.log(err)
+        return res.status(400).send();
     })
 })
 
