@@ -19,6 +19,10 @@ const users = [{
     _id: userTwoObjId,
     email: 'usertwo@gmail.com',
     password: '112344nn',
+    tokens: [{
+        access: 'auth',
+        token: jwt.sign({ _id: userTwoObjId.toHexString(), access: 'auth' }, 'abc123').toString()
+    }]
 }];
 
 const populateUsers = (done) => {
@@ -30,7 +34,7 @@ const populateUsers = (done) => {
 }
 
 
-const todos = [{ _id: new ObjectID(), text: 'test todos1' }, { _id: new ObjectID(), text: 'test todos2' }];
+const todos = [{ _id: new ObjectID(), text: 'test todos1', _creator: userOneObjId }, { _id: new ObjectID(), text: 'test todos2', _creator: userTwoObjId }];
 
 const populateTodos = (done) => {
     Todo.remove({}).then(() => {

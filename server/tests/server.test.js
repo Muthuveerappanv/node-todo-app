@@ -13,17 +13,20 @@ beforeEach(populateTodos);
 
 describe('POST /todos', () => {
     it('Should test /todos response', (done) => {
+        console.log('here')
+        console.log(users[0]._id)
         var text = 'Test todo text';
         request(app)
             .post('/todos')
-            .send({ text })
+            .set('x-auth', users[0].tokens[0].token)
+            .send({ text, _creator: users[0]._id })
             .expect(200)
             .expect('Content-Type', /json/)
             .expect((res) => {
                 expect(res.body.text).toBe(text);
             }).end((err, res) => {
                 if (err) return err;
-                Todo.find({ text }).then((todos) => {
+                Todo.find({ text, _creator: users[0]._id }).then((todos) => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text === text);
                     done();
@@ -34,13 +37,14 @@ describe('POST /todos', () => {
     it('Should test /todos for bad request', (done) => {
         request(app)
             .post('/todos')
+            .set('x-auth', users[0].tokens[0].token)
             .send({})
             .expect(400)
             .expect('Content-Type', /json/)
             .end((err, res) => {
                 if (err) return err;
-                Todo.find().then((todos) => {
-                    expect(todos.length).toBe(2);
+                Todo.find({ _creator: users[0]._id }).then((todos) => {
+                    expect(todos.length).toBe(1);
                     done();
                 }).catch(err => done(err));
             });
@@ -52,6 +56,7 @@ describe('GET /todos', () => {
         var text = 'Test todo text';
         request(app)
             .get('/todos')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect('Content-Type', /json/)
             .expect(res => {
@@ -66,6 +71,7 @@ describe('GET /todos/:id', () => {
         var id = todos[0]._id;
         request(app)
             .get(`/todos/${id.toString()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect('Content-Type', /json/)
             .expect(res => {
@@ -74,9 +80,10 @@ describe('GET /todos/:id', () => {
             .end(done);
     })
 
-    it('Should return a 404 if incorrect objectId passed', (done) => {
+    it('Should return a 404 if incorrect user id is passed', (done) => {
         request(app)
-            .get('/todos/1')
+            .get(`/todos/${users[1]._id}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .expect(res => {
                 expect(res.body).toEqual({});
@@ -87,6 +94,7 @@ describe('GET /todos/:id', () => {
     it('Should return a 404 if no todo found', (done) => {
         request(app)
             .get(`/todos/${new ObjectID()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .expect(res => {
                 expect(res.body).toEqual({});
@@ -98,15 +106,19 @@ describe('GET /todos/:id', () => {
 
 describe('Delete /todos/:id', () => {
     it('Should return todo doc after successfully deleting', (done) => {
-        var id = todos[0]._id;
+        var id = todos[1]._id;
         request(app)
             .delete(`/todos/${id.toString()}`)
+            .set('x-auth', users[1].tokens[0].token)
             .expect(202)
             .expect('Content-Type', /json/)
             .expect(res => {
-                expect(res.body.todo.text).toEqual(todos[0].text);
+                expect(res.body.todo.text).toEqual(todos[1].text);
             }).end((err, res) => {
-                if (err) return err;
+                if (err) {
+                    console.log(err);
+                    return err
+                };
                 Todo.findById(id).then(todo => {
                     expect(todo).toBeNull();
                     done();
@@ -117,6 +129,7 @@ describe('Delete /todos/:id', () => {
     it('Should return a 404 if incorrect objectId passed', (done) => {
         request(app)
             .delete('/todos/1')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .expect(res => {
                 expect(res.body).toEqual({});
@@ -127,6 +140,7 @@ describe('Delete /todos/:id', () => {
     it('Should return a 404 if no todo found', (done) => {
         request(app)
             .delete(`/todos/${new ObjectID()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .expect(res => {
                 expect(res.body).toEqual({});
@@ -142,6 +156,7 @@ describe('Patch /todos/:id', () => {
         var patchinput = { 'text': 'testing patch', 'completed': true };
         request(app)
             .patch(`/todos/${id.toString()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .send(patchinput)
             .expect(202)
             .expect('Content-Type', /json/)
