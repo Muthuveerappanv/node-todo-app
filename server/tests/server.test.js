@@ -120,7 +120,7 @@ describe('Delete /todos/:id', () => {
                     return err
                 };
                 Todo.findById(id).then(todo => {
-                    expect(todo).toBeNull();
+                    expect(todo).toBeFalsy();
                     done();
                 })
             });
